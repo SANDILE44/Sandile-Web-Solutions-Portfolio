@@ -19,16 +19,16 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Visitor notification middleware for homepage
+// Visitor notification for homepage
 app.get('/', async (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 
     try {
         await transporter.sendMail({
-            from: 'Portfolio Notifier <' + process.env.EMAIL_USER + '>',
+            from: `Portfolio Notifier <${process.env.EMAIL_USER}>`,
             to: process.env.EMAIL_USER,
             subject: 'New Visitor Alert!',
-            text: `Someone just visited your portfolio at ${new Date().toLocaleString()}`
+            text: `Someone visited your portfolio at ${new Date().toLocaleString()}`
         });
         console.log('Visitor email sent!');
     } catch (err) {
@@ -43,11 +43,21 @@ app.post('/send-email', async (req, res) => {
 
     try {
         await transporter.sendMail({
-            from: `${name} <${email}>`,
+            from: `"${name}" <${email}>`,
             to: process.env.EMAIL_USER,
             subject: `Portfolio Contact Form: ${name}`,
+            html: `
+                <h2>New Message from Portfolio</h2>
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Message:</strong></p>
+                <p>${message}</p>
+                <hr>
+                <p>Sandile Web Solutions &copy; 2025</p>
+            `,
             text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`
         });
+
         res.json({ success: true });
     } catch (err) {
         console.error('Email error:', err);
@@ -55,17 +65,11 @@ app.post('/send-email', async (req, res) => {
     }
 });
 
-// Serve other pages
-const pages = ['projects.html', 'about.html', 'contact.html'];
-pages.forEach(page => {
-    app.get(`/${page}`, (req, res) => res.sendFile(path.join(__dirname, page)));
-});
-
-// Test email route (optional)
+// Test email route
 app.get('/test-email', async (req, res) => {
     try {
         await transporter.sendMail({
-            from: 'Test <' + process.env.EMAIL_USER + '>',
+            from: `Test <${process.env.EMAIL_USER}>`,
             to: process.env.EMAIL_USER,
             subject: 'Test Email',
             text: 'This is a test email from your portfolio.'
@@ -75,6 +79,12 @@ app.get('/test-email', async (req, res) => {
         console.error('Test email error:', err);
         res.send('Failed to send test email.');
     }
+});
+
+// Serve other pages
+const pages = ['about.html','projects.html','contact.html'];
+pages.forEach(page => {
+    app.get(`/${page}`, (req,res) => res.sendFile(path.join(__dirname,page)));
 });
 
 // Start server
